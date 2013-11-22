@@ -13,7 +13,7 @@
 
   :dependencies [[ar-drone "0.1.9a"]
                  [org.clojure-android/clojure "1.5.1-jb" :use-resources true]
-                 [neko/neko "3.0.0-preview3"]]
+                 [neko/neko "3.0.0-preview4"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
                                   [compliment "0.0.2"]]
                    :android {:aot :all-with-unused}}
