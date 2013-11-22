@@ -30,4 +30,5 @@
     (on-ui
      (set-content-view! a
       (make-ui [:linear-layout {}
+                [:progress-bar {:progress 50 :max 100}]
                 [:text-view {:text "Hello from Clojure!"}]])))))
