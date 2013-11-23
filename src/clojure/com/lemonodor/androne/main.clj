@@ -2,6 +2,7 @@
   (:use
    [com.lemonodor.androne.speech :as speech]
    [neko.activity :only [defactivity set-content-view!]]
+   [neko.context :as context]
    [neko.log :as log]
    [neko.threading :only [on-ui]]
    [neko.ui :as ui]
@@ -10,6 +11,8 @@
    )
   (:import
    (android.app Activity)
+   (android.content Context)
+   (android.media AudioManager)
    (android.os Bundle)
    (android.speech SpeechRecognizer)
    (android.util Log)
@@ -38,10 +41,12 @@
 
 (def recognizer (atom nil))
 (def tts (atom nil))
+(def audio-manager (atom nil))
 
 
 (defn listen []
   (log/i "STARTING LISTENING")
+  (.setStreamMute @audio-manager AudioManager/STREAM_SYSTEM true)
   (speech/start-listening @recognizer))
 
 
@@ -66,9 +71,10 @@
 
 
 (defn handle-speech-results [^Bundle results]
-  (log/i :on-speech-results (str "\n\n\n" results "\n\n\n"))
   (let [texts (speech/speech-results results)]
+    (log/i :on-speech-results (str "\n\n\n" texts "\n\n\n"))
     (set-elmt ::recognized-text (first texts))
+    (set-elmt ::speech-status "")
     ;; (log/i "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
@@ -121,6 +127,9 @@
                    (apply str (repeat unfilled " "))
                    "|"))))
 
+(defn handle-ready-for-speech [_]
+  (.setStreamMute @audio-manager AudioManager/STREAM_SYSTEM false))
+
 
 (defactivity com.lemonodor.androne.AndroneActivity
   :def a
@@ -129,7 +138,9 @@
     (on-ui
      (set-content-view! a
       (ui/make-ui main-layout))
-     (reset! tts (android.speech.tts.TextToSpeech. neko.context/context nil))
+     (reset! audio-manager
+             (.getSystemService context/context Context/AUDIO_SERVICE))
+     (reset! tts (android.speech.tts.TextToSpeech. context/context nil))
      (reset!
       recognizer
       (speech/create-recognizer
