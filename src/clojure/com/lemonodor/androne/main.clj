@@ -45,9 +45,30 @@
   (speech/start-listening @recognizer))
 
 
+(declare ^android.widget.LinearLayout mylayout)
+
+(def main-layout
+  [:linear-layout {:id-holder true
+                   :def `mylayout
+                   :orientation :vertical}
+   [:text-view {:id ::audio-level
+                :text ""
+                :typeface android.graphics.Typeface/MONOSPACE
+                }]
+   [:text-view {:id ::recognized-text
+                :text ""}]
+   [:text-view {:id ::speech-status
+                :text ""}]])
+
+
+(defn set-elmt [elmt s]
+  (on-ui (config (elmt (.getTag mylayout)) :text s)))
+
+
 (defn handle-speech-results [^Bundle results]
-  (log/i :on-speech-results results)
+  (log/i :on-speech-results (str "\n\n\n" results "\n\n\n"))
   (let [texts (speech/speech-results results)]
+    (set-elmt ::recognized-text (first texts))
     ;; (log/i "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
@@ -72,26 +93,12 @@
 
 (defn handle-speech-error [error]
   (log/i :on-speech-error error (str "(" (speech/error-name error) ")"))
+  (set-elmt ::speech-status (speech/error-name error))
   (when (not (= error SpeechRecognizer/ERROR_RECOGNIZER_BUSY))
     (listen)))
 
 
-(declare ^android.widget.LinearLayout mylayout)
-
-(def main-layout
-  [:linear-layout {:id-holder true, :def `mylayout}
-   [:text-view {:id ::audio-level
-                :text ""
-                :typeface android.graphics.Typeface/MONOSPACE
-                }]])
-
-
-(defn set-elmt [elmt s]
-  (on-ui (config (elmt (.getTag mylayout)) :text s)))
-
-
 (def audio-rms-bounds (atom [nil nil]))
-
 
 (defn update-rms [rms]
   (swap! audio-rms-bounds
