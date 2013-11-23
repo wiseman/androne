@@ -44,9 +44,13 @@
 (def audio-manager (atom nil))
 
 
+(defn set-mute! [^AudioManager audio-manager mute?]
+  (.setStreamMute audio-manager AudioManager/STREAM_SYSTEM mute?))
+
+
 (defn listen []
   (log/i "STARTING LISTENING")
-  (.setStreamMute @audio-manager AudioManager/STREAM_SYSTEM true)
+  (set-mute! @audio-manager true)
   (speech/start-listening @recognizer))
 
 
@@ -128,7 +132,7 @@
                    "|"))))
 
 (defn handle-ready-for-speech [_]
-  (.setStreamMute @audio-manager AudioManager/STREAM_SYSTEM false))
+  (set-mute! @audio-manager false))
 
 
 (defactivity com.lemonodor.androne.AndroneActivity
