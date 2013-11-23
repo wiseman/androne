@@ -4,7 +4,7 @@
    [neko.activity :only [defactivity set-content-view!]]
    [neko.log :as log]
    [neko.threading :only [on-ui]]
-   [neko.ui :only [make-ui]]
+   [neko.ui :as ui]
    [neko.ui.mapping :as mapping]
    [neko.ui.traits :as traits]
    )
@@ -31,6 +31,9 @@
 (traits/deftrait :indeterminate
   [^ProgressBar wdg, {:keys [indeterminate?]} _]
   (.setIndeterminate wdg indeterminate?))
+
+;;(traits/deftrait :type-face
+;;  [^TextView wdg, {:keys [typeface]} _]
 
 
 (def recognizer (atom nil))
@@ -73,15 +76,52 @@
     (listen)))
 
 
+(declare ^android.widget.LinearLayout mylayout)
+
+(def main-layout
+  [:linear-layout {:id-holder true, :def `mylayout}
+   [:text-view {:id ::audio-level
+                :text ""
+                :typeface android.graphics.Typeface/MONOSPACE
+                }]])
+
+
+(defn set-elmt [elmt s]
+  (on-ui (config (elmt (.getTag mylayout)) :text s)))
+
+
+(def audio-rms-bounds (atom [nil nil]))
+
+
+(defn update-rms [rms]
+  (swap! audio-rms-bounds
+         (fn [bounds]
+           [(if-let [prev-lower-bound (bounds 0)]
+              (min rms prev-lower-bound)
+              rms)
+            (if-let [prev-upper-bound (bounds 1)]
+              (max rms prev-upper-bound)
+              rms)]))
+  (let [[lower-bound upper-bound] @audio-rms-bounds
+        mag (- rms lower-bound)
+        frac (/ mag (max 1 (- upper-bound lower-bound)))
+        width 40
+        filled (unchecked-int (* width frac))
+        unfilled (- width filled)]
+    (set-elmt ::audio-level
+              (str "|"
+                   (apply str (repeat filled "="))
+                   (apply str (repeat unfilled " "))
+                   "|"))))
+
+
 (defactivity com.lemonodor.androne.AndroneActivity
   :def a
   :on-create
   (fn [this bundle]
     (on-ui
      (set-content-view! a
-      (make-ui [:linear-layout {}
-                [:progress-bar {:indeterminate false :progress 50 :max 100}]
-                [:text-view {:text "Hello from Clojure!"}]]))
+      (ui/make-ui main-layout))
      (reset! tts (android.speech.tts.TextToSpeech. neko.context/context nil))
      (reset!
       recognizer
@@ -95,7 +135,7 @@
         :on-partial-results #(log/i :on-partial-results %1)
         :on-ready-for-speech #(log/i :on-ready-for-speech %1)
         :on-results handle-speech-results
-        :on-rms-changed #(log/i :on-rms-changed %1))))
+        :on-rms-changed update-rms)))
      (log/i "Created speech recognizer")
      (speech/start-listening @recognizer)
      (log/i "Started listening"))))
