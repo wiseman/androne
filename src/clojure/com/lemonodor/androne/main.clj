@@ -10,36 +10,16 @@
    [neko.ui.traits :as traits]
    )
   (:import
-   (android.app Activity)
-   (android.content Context)
-   (android.media AudioManager)
-   (android.os Bundle)
-   (android.speech SpeechRecognizer)
-   (android.util Log)
-   (android.widget ProgressBar)))
+   [android.app Activity]
+   [android.content Context]
+   [android.media AudioManager]
+   [android.os Bundle]
+   [android.speech SpeechRecognizer]
+   [android.util Log]
+   ))
 
 
-(mapping/defelement :progress-bar
-  :classname ProgressBar
-  :inherits :view)
-
-(traits/deftrait :progress
-  [^ProgressBar wdg, {:keys [progress]} _]
-  (.setProgress wdg progress))
-
-(traits/deftrait :max
-  [^ProgressBar wdg, {:keys [max]} _]
-  (.setMax wdg max))
-
-(traits/deftrait :indeterminate
-  [^ProgressBar wdg, {:keys [indeterminate?]} _]
-  (.setIndeterminate wdg indeterminate?))
-
-;;(traits/deftrait :type-face
-;;  [^TextView wdg, {:keys [typeface]} _]
-
-
-(def recognizer (atom nil))
+(def speech-recognizer (atom nil))
 (def tts (atom nil))
 (def audio-manager (atom nil))
 
@@ -51,7 +31,7 @@
 (defn listen []
   (log/i "STARTING LISTENING")
   (set-mute! @audio-manager true)
-  (speech/start-listening @recognizer))
+  (speech/start-listening @speech-recognizer))
 
 
 (declare ^android.widget.LinearLayout mylayout)
@@ -110,16 +90,16 @@
 
 (def audio-rms-bounds (atom [nil nil]))
 
+(defn update-bounds [[prev-lower-bound prev-upper-bound] v]
+  [(if prev-lower-bound
+     (min v prev-lower-bound)
+     v)
+   (if prev-upper-bound
+     (max v prev-upper-bound)
+     v)])
+
 (defn update-rms [rms]
-  (swap! audio-rms-bounds
-         (fn [bounds]
-           [(if-let [prev-lower-bound (bounds 0)]
-              (min rms prev-lower-bound)
-              rms)
-            (if-let [prev-upper-bound (bounds 1)]
-              (max rms prev-upper-bound)
-              rms)]))
-  (let [[lower-bound upper-bound] @audio-rms-bounds
+  (let [[lower-bound upper-bound] (swap! audio-rms-bounds update-bounds)
         mag (- rms lower-bound)
         frac (/ mag (max 1 (- upper-bound lower-bound)))
         width 40
@@ -146,7 +126,7 @@
              (.getSystemService context/context Context/AUDIO_SERVICE))
      (reset! tts (android.speech.tts.TextToSpeech. context/context nil))
      (reset!
-      recognizer
+      speech-recognizer
       (speech/create-recognizer
        (speech/recognizer-listener
         :on-beginning-of-speech #(log/i :on-beginning-of-speech)
@@ -159,5 +139,5 @@
         :on-results handle-speech-results
         :on-rms-changed update-rms)))
      (log/i "Created speech recognizer")
-     (speech/start-listening @recognizer)
+     (speech/start-listening @speech-recognizer)
      (log/i "Started listening"))))
