@@ -1,5 +1,6 @@
 (ns com.lemonodor.androne.main
   (:use
+   [com.lemonodor.androne.fdl :as fdl]
    [com.lemonodor.androne.speech :as speech]
    [neko.activity :only [defactivity set-content-view!]]
    [neko.context :as context]
@@ -17,6 +18,32 @@
    [android.speech SpeechRecognizer]
    [android.util Log]
    ))
+
+
+(def world
+  (fdl/defworld
+    [take-off
+     :phrases
+     [[take off]
+      [takeoff]]
+     :action do-take-off]
+    [land
+     :phrases
+     [[land]]
+     :action do-land]
+    [forward
+     :parent relative-direction
+     :phrases
+     [[forward]]]
+    [backward
+     :parent relative-direction
+     :phrases
+     [[backward]]]
+    [move
+     :constraints
+     [[direction relative-direction]]
+     :phrases
+     [[move (direction)]]]))
 
 
 (def speech-recognizer (atom nil))
