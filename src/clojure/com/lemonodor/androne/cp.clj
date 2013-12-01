@@ -11,8 +11,7 @@
   (let [parser-state (update-in parser-state :references
                                 conj
                                 (Reference. token start end))]
-    (reduce (fn [state abst]
-              (advance-predictions-on state abst))
+    (reduce advance-predictions-on
             (all-abstractions-of item))))
 
 
