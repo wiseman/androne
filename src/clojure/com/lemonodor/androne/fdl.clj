@@ -5,14 +5,6 @@
   (assoc-in world [child ::prototype] parent))
 
 
-(defn isa? [world child parent]
-  (if (= child parent)
-    true
-    (if child
-      (recur world (get-in world [child ::prototype]) parent)
-      false)))
-
-
 (defn all-abstractions-of [world concept]
   (lazy-seq
    (if (not concept)
@@ -22,12 +14,13 @@
                                 (get-in world [concept ::prototype]))))))
 
 
+(defn isa? [world child parent]
+  (some #{parent} (all-abstractions-of world child)))
+
+
 (defn get-slot [world concept slot-name]
-  (if concept
-    (if-let [v (get-in world [concept slot-name])]
-      v
-      (recur world (get-in world [concept ::prototype]) slot-name))
-    nil))
+  (some #(get-in world [%1 slot-name])
+        (all-abstractions-of world concept)))
 
 
 (defn put-slot [world concept slot-name slot-value]
