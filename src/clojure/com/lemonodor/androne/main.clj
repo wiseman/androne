@@ -23,21 +23,21 @@
 (def world
   (fdl/defworld
     [take-off
-     :phrases
+     :index-sets
      [[take off]
       [takeoff]]
      :action do-take-off]
     [land
-     :phrases
+     :index-sets
      [[land]]
      :action do-land]
     [forward
      :parent relative-direction
-     :phrases
+     :index-sets
      [[forward]]]
     [backward
      :parent relative-direction
-     :phrases
+     :index-sets
      [[backward]]]
     [move
      :constraints
