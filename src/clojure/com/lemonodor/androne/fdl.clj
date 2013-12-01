@@ -7,7 +7,7 @@
 
 (defn all-abstractions-of [world concept]
   (lazy-seq
-   (if (not concept)
+   (if-not concept
      '()
      (cons concept
            (all-abstractions-of world
@@ -44,8 +44,7 @@
         handler (clause-handlers clause-name)]
     (if handler
       (handler world concept-name clause-body)
-      (do
-        (put-slot world concept-name clause-name clause-body)))))
+      (put-slot world concept-name clause-name clause-body))))
 
 
 (defn apply-frame [world frame]
@@ -59,4 +58,4 @@
 
 (defn define-world [frames]
   (assert (seq frames))
-  (reduce #(apply-frame %1 %2) {} frames))
+  (reduce apply-frame {} frames))

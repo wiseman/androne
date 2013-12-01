@@ -1,5 +1,6 @@
 (ns com.lemonodor.androne.main
   (:use
+   [clojure.string :as string]
    [com.lemonodor.androne.fdl :as fdl]
    [com.lemonodor.androne.speech :as speech]
    [neko.activity :only [defactivity set-content-view!]]
@@ -111,7 +112,7 @@
 (defn handle-speech-error [error]
   (log/i :on-speech-error error (str "(" (speech/error-name error) ")"))
   (set-elmt ::speech-status (speech/error-name error))
-  (when (not (= error SpeechRecognizer/ERROR_RECOGNIZER_BUSY))
+  (when-not (= error SpeechRecognizer/ERROR_RECOGNIZER_BUSY)
     (listen)))
 
 
@@ -134,8 +135,8 @@
         unfilled (- width filled)]
     (set-elmt ::audio-level
               (str "|"
-                   (apply str (repeat filled "="))
-                   (apply str (repeat unfilled " "))
+                   (string/join (repeat filled "="))
+                   (string/join (repeat unfilled " "))
                    "|"))))
 
 (defn handle-ready-for-speech [_]
