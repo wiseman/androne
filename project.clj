@@ -15,6 +15,7 @@
                  [org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [neko/neko "3.0.0-preview4"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
+                                  [org.clojure/math.numeric-tower "0.0.2"]
                                   [compliment "0.0.2"]]
                    :android {:aot :all-with-unused}}
              :release {:android
