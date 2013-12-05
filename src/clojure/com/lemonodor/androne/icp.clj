@@ -79,7 +79,10 @@
            last
            >
            (map (fn [index-set]
-                  [concept (score-index-set concept-index index-set words)])
+                  [concept (score-index-set
+                            concept-index
+                            (map str index-set)
+                            words)])
                 (get-in world [concept :index-sets])))))
        concepts))
 

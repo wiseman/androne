@@ -6,6 +6,20 @@
    [com.lemonodor.androne.icp :as icp]))
 
 
+(def epsilon (* 2 Float/MIN_VALUE))
+
+
+(defn nearly= [a b]
+  (< (math/abs (- a b)) epsilon))
+
+
+(defn parse-results= [results1 results2]
+  (every? (fn [[r1 r2]]
+            (and (= (first r1) (first r2))
+                 (nearly= (second r1) (second r2))))
+          (map vector results1 results2)))
+
+
 (deftest icp-tests
   (let [w (fdl/defworld
             [move-forward
@@ -29,51 +43,54 @@
     (testing "probabilities"
       (is (= (icp/probability-of-word idx "move") 2/3))
       (is (= (icp/probability-of-word idx "forward") 1/3))
-      (is (< (math/abs (icp/probability-of-word idx "blue")) 0.001)))
+      (is (nearly= (icp/probability-of-word idx "blue") 0)))
     (testing "information values"
       (is (= (icp/information-value idx "move") 0.5849625007211561))
       (is (= (icp/information-value idx "forward") 1.5849625007211563))
-      (is (zero? (icp/information-value idx "please"))))
+      (is (nearly= (icp/information-value idx "please") 0)))
     (testing "scoring"
       (is (= (icp/predicted-score idx ["please" "take" "off"] ["please" "take"])
              0.5))
-      (is (= (icp/predicted-score
-              idx
-              ["please" "take" "off"]
-              ["please" "take" "off"])
+      (is (= (icp/predicted-score idx
+                                  ["please" "take" "off"]
+                                  ["please" "take" "off"])
              1.0))
-      (is (= (icp/unpredicted-score
-              idx
-              ["please" "take" "off"]
-              ["please" "take" "off"])
+      (is (= (icp/unpredicted-score idx
+                                    ["please" "take" "off"]
+                                    ["please" "take" "off"])
              1.0))
-      (is (= (icp/unpredicted-score
-              idx
-              ["please" "take" "off"]
-              ["please" "take" "blue" "off"])
+      (is (= (icp/unpredicted-score idx
+                                    ["please" "take" "off"]
+                                    ["please" "take" "blue" "off"])
              0.02083148165718207))
-      (is (= (icp/score-index-set
-              idx
-              ["please" "take" "off"]
-              ["please" "take"])
+      (is (= (icp/score-index-set idx
+                                  ["please" "take" "off"]
+                                  ["please" "take"])
              1.5))
-      (is (= (icp/score-index-set
-              idx
-              ["please" "take" "off"]
-              ["please" "take" "off"])
+      (is (= (icp/score-index-set idx
+                                  ["please" "take" "off"]
+                                  ["please" "take" "off"])
              2.0))
-      (is (= (icp/score-index-sets
-              idx
-              w
-              #{'take-off}
-              ["please" "take"])
-             nil)))
+      (is (= (icp/score-index-sets idx
+                                   w
+                                   #{'take-off}
+                                   ["please" "take"])
+             '([take-off 1.5]))))
     (testing "icp"
-      (is (= (icp/icp w ["please" "take"])
-             nil))
-      (is (= (icp/icp w ["please"])
-             nil))
-      (is (= (icp/icp w ["please" "take" "off"])
-             nil))
-      (is (= (icp/icp w ["please" "take" "blue" "off"])
-             nil)))))
+      (is (parse-results=
+           (icp/icp w ["please" "take"])
+           '([take-off 1.5] [move-forward 0] [move-backward 0])))
+      (is (parse-results=
+           (icp/icp w ["please" "take"])
+           '([take-off 1.5] [move-forward 0] [move-backward 0])))
+      (is (parse-results=
+           (icp/icp w ["please"])
+           '([move-forward 1.0] [take-off 1.0] [move-backward 1.0])))
+      (is (parse-results=
+           (icp/icp w ["please" "take" "off"])
+           '([take-off 2.0] [move-forward 0] [move-backward 0])))
+      (is (parse-results=
+           (icp/icp w ["please" "take" "blue" "off"])
+           '([take-off 1.020831481657182]
+             [move-forward 0]
+             [move-backward 0]))))))
