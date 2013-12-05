@@ -23,11 +23,11 @@
 (deftest icp-tests
   (let [w (fdl/defworld
             [move-forward
-             :index-sets [["please" "move" "forward"]]]
+             :index-sets [[please move forward]]]
             [move-backward
-             :index-sets [["please" "move" "backward"]]]
+             :index-sets [[please move backward]]]
             [take-off
-             :index-sets [["please" "take" "off"] ["please" "takeoff"]]])
+             :index-sets [[please take off] [please takeoff]]])
         idx (icp/index-concepts w)]
     (testing "index-concepts"
       (is (= idx

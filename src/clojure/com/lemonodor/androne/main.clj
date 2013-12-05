@@ -2,6 +2,7 @@
   (:use
    [clojure.string :as string]
    [com.lemonodor.androne.fdl :as fdl]
+   [com.lemonodor.androne.icp :as icp]
    [com.lemonodor.androne.speech :as speech]
    [neko.activity :only [defactivity set-content-view!]]
    [neko.context :as context]
@@ -30,7 +31,7 @@
      :action do-take-off]
     [land
      :index-sets
-     [[land]]
+     [[land] [abort] [emergency]]
      :action do-land]
     [forward
      :parent relative-direction
@@ -40,11 +41,12 @@
      :parent relative-direction
      :index-sets
      [[backward]]]
-    [move
-     :constraints
-     [[direction relative-direction]]
-     :phrases
-     [[move (direction)]]]))
+    ;; [move
+    ;;  :constraints
+    ;;  [[direction relative-direction]]
+    ;;  :phrases
+    ;;  [[move (direction)]]]
+    ))
 
 
 (def speech-recognizer (atom nil))
@@ -74,6 +76,8 @@
                 }]
    [:text-view {:id ::recognized-text
                 :text ""}]
+   [:text-view {:id ::parse
+                :text ""}]
    [:text-view {:id ::speech-status
                 :text ""}]])
 
@@ -83,10 +87,14 @@
 
 
 (defn handle-speech-results [^Bundle results]
+  (set-elmt ::speech-status "")
   (let [texts (speech/speech-results results)]
     (log/i :on-speech-results (str "\n\n\n" texts "\n\n\n"))
-    (set-elmt ::recognized-text (first texts))
-    (set-elmt ::speech-status "")
+    (let [best-text (first texts)
+          parses (icp/icp world best-text)]
+      (set-elmt ::recognized-text best-text)
+      (when parses
+        (set-elmt ::parse (first (first parses)))))
     ;; (log/i "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
