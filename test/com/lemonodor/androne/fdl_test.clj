@@ -8,10 +8,10 @@
   (let [w (-> {}
               (fdl/beget 'object 'animal)
               (fdl/beget 'animal 'cat))]
-    (testing "beget/isa?"
-      (is (fdl/isa? w 'animal 'object))
-      (is (fdl/isa? w 'cat 'animal))
-      (is (fdl/isa? w 'cat 'object)))
+    (testing "beget/is-a?"
+      (is (fdl/is-a? w 'animal 'object))
+      (is (fdl/is-a? w 'cat 'animal))
+      (is (fdl/is-a? w 'cat 'object)))
     (testing "all-abstractions-of"
       (is (= (fdl/all-abstractions-of w 'object) '(object)))
       (is (= (fdl/all-abstractions-of w 'animal) '(animal object)))

@@ -14,7 +14,7 @@
                                 (get-in world [concept ::prototype]))))))
 
 
-(defn isa? [world child parent]
+(defn is-a? [world child parent]
   (some #{parent} (all-abstractions-of world child)))
 
 
