@@ -25,22 +25,18 @@
 (def world
   (fdl/defworld
     [take-off
-     :index-sets
-     [[take off]
-      [takeoff]]
+     :index-sets [[take off]
+                  [takeoff]]
      :action do-take-off]
     [land
-     :index-sets
-     [[land] [abort] [emergency]]
+     :index-sets [[land] [abort] [emergency]]
      :action do-land]
     [forward
      :parent relative-direction
-     :index-sets
-     [[forward]]]
+     :index-sets [[forward]]]
     [backward
      :parent relative-direction
-     :index-sets
-     [[backward]]]
+     :index-sets [[backward]]]
     ;; [move
     ;;  :constraints
     ;;  [[direction relative-direction]]
@@ -91,10 +87,12 @@
   (let [texts (speech/speech-results results)]
     (log/i :on-speech-results (str "\n\n\n" texts "\n\n\n"))
     (let [best-text (first texts)
-          parses (icp/icp world best-text)]
+          parses (icp/icp world (string/split best-text #"\s+"))]
+      (log/i "Best text" best-text)
+      (log/i "Parses" parses)
       (set-elmt ::recognized-text best-text)
-      (when parses
-        (set-elmt ::parse (first (first parses)))))
+      (when (seq parses)
+        (set-elmt ::parse (str (first parses)))))
     ;; (log/i "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
@@ -135,7 +133,7 @@
      v)])
 
 (defn update-rms [rms]
-  (let [[lower-bound upper-bound] (swap! audio-rms-bounds update-bounds)
+  (let [[lower-bound upper-bound] (swap! audio-rms-bounds update-bounds rms)
         mag (- rms lower-bound)
         frac (/ mag (max 1 (- upper-bound lower-bound)))
         width 40

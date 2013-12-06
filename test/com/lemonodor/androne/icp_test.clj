@@ -93,4 +93,25 @@
            (icp/icp w ["please" "take" "blue" "off"])
            '([take-off 1.020831481657182]
              [move-forward 0]
-             [move-backward 0]))))))
+             [move-backward 0])))
+      (is (= (icp/icp w ["NOOOOO"]) '())))))
+
+(deftest world-test
+  (let [w (fdl/defworld
+            [take-off
+             :index-sets [[take off]
+                          [takeoff]]
+             :action do-take-off]
+            [land
+             :index-sets [[land] [abort] [emergency]]
+             :action do-land]
+            [forward
+             :parent relative-direction
+             :index-sets [[forward]]]
+            [backward
+             :parent relative-direction
+             :index-sets [[backward]]])]
+    (testing "parsing"
+      (println "TOTALLY PARSING")
+      (is (parse-results= (icp/icp w '("land"))
+                          '([land 2.0]))))))

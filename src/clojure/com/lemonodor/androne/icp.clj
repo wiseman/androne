@@ -10,15 +10,17 @@
 
 
 (defn index-concepts [world]
-  (apply merge-with set/union
-         (map #(apply index-concept %1) world)))
+  (let [index (apply merge-with set/union
+                     (map #(apply index-concept %1) world))]
+    index))
 
 
 (defn lookup-concepts [concept-index tokens]
-  (set
-   (reduce concat
-           (map #(get concept-index %1)
-                tokens))))
+  (let [concepts (set
+                  (reduce concat
+                          (map #(get concept-index %1)
+                               tokens)))]
+    concepts))
 
 
 (defn target-concept-cardinality [concept-index word]
