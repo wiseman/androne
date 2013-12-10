@@ -1,13 +1,14 @@
 (ns com.lemonodor.androne.main
-  (:use
+  (:require
+   ;;[clj-drone.core :as ar-drone]
    [clojure.string :as string]
    [com.lemonodor.androne.fdl :as fdl]
    [com.lemonodor.androne.icp :as icp]
    [com.lemonodor.androne.speech :as speech]
-   [neko.activity :only [defactivity set-content-view!]]
+   [neko.activity :as activity]
    [neko.context :as context]
    [neko.log :as log]
-   [neko.threading :only [on-ui]]
+   [neko.threading :as threading]
    [neko.ui :as ui]
    [neko.ui.mapping :as mapping]
    [neko.ui.traits :as traits]
@@ -27,10 +28,10 @@
     [take-off
      :index-sets [[take off]
                   [takeoff]]
-     :action do-take-off]
+     :action :do-take-off]
     [land
      :index-sets [[land] [abort] [emergency]]
-     :action do-land]
+     :action :do-land]
     [forward
      :parent relative-direction
      :index-sets [[forward]]]
@@ -43,6 +44,51 @@
     ;;  :phrases
     ;;  [[move (direction)]]]
     ))
+
+
+(def drone (agent false))
+
+(defn act-on-drone [drone fn]
+  (when-not drone
+    ;;(ar-drone/drone-initialize)
+    )
+  (apply fn '())
+  true)
+
+(defn act-on-drone! [fn]
+  (send-off agent act-on-drone fn))
+
+
+(defn do-land [parse]
+  (log/i "Drone is landing."))
+
+(defn do-take-off [parse]
+  (log/i "Drone is taking off."))
+
+
+(def drone-actions
+  {:do-land do-land
+   :do-takeoff do-take-off})
+
+
+(defn action-for-concept [concept]
+  (drone-actions
+   (fdl/get-slot world concept :action)))
+
+
+(defn perform-drone-action-for-concept [concept]
+  (act-on-drone! (action-for-concept concept)))
+
+
+(defn perform-action-for-concept [world concept]
+  (log/i "Performing action" concept)
+  (let [action-sym (fdl/get-slot world concept :action)
+        action-function (drone-actions action-sym)]
+    (log/i "Action sym:" action-sym
+           "Action function:" action-function)
+    (when action-function
+      (log/i "Calling" action-function)
+      (apply action-function '()))))
 
 
 (def speech-recognizer (atom nil))
@@ -79,7 +125,7 @@
 
 
 (defn set-elmt [elmt s]
-  (on-ui (config (elmt (.getTag mylayout)) :text s)))
+  (threading/on-ui (ui/config (elmt (.getTag mylayout)) :text s)))
 
 
 (defn handle-speech-results [^Bundle results]
@@ -91,8 +137,11 @@
       (log/i "Best text" best-text)
       (log/i "Parses" parses)
       (set-elmt ::recognized-text best-text)
-      (when (seq parses)
-        (set-elmt ::parse (str (first parses)))))
+      (let [best-parse (first parses)]
+        (when best-parse
+          (set-elmt ::parse (str best-parse))
+          (perform-action-for-concept world (first best-parse)))))
+
     ;; (log/i "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
@@ -149,13 +198,14 @@
   (set-mute! @audio-manager false))
 
 
-(defactivity com.lemonodor.androne.AndroneActivity
+(activity/defactivity com.lemonodor.androne.AndroneActivity
   :def a
   :on-create
   (fn [this bundle]
-    (on-ui
-     (set-content-view! a
+    (threading/on-ui
+     (activity/set-content-view! a
       (ui/make-ui main-layout))
+     (log/i "WORLD" world)
      (reset! audio-manager
              (.getSystemService context/context Context/AUDIO_SERVICE))
      (reset! tts (android.speech.tts.TextToSpeech. context/context nil))
