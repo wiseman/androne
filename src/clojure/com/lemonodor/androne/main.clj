@@ -2,6 +2,7 @@
   (:require
    ;;[clj-drone.core :as ar-drone]
    [clojure.string :as string]
+   ;[clojure.tools.logging :as log]
    [com.lemonodor.androne.fdl :as fdl]
    [com.lemonodor.androne.icp :as icp]
    [com.lemonodor.androne.speech :as speech]
@@ -21,6 +22,10 @@
    [android.speech SpeechRecognizer]
    [android.util Log]
    ))
+
+
+(defn log-it [& args]
+  nil)
 
 
 (def world
@@ -48,27 +53,27 @@
 
 (def drone (agent false))
 
-(defn act-on-drone [drone fn]
+(defn act-on-drone [drone fn args]
   (when-not drone
     ;;(ar-drone/drone-initialize)
     )
-  (apply fn '())
+  (apply fn args)
   true)
 
-(defn act-on-drone! [fn]
-  (send-off agent act-on-drone fn))
+(defn act-on-drone! [fn args]
+  (send-off agent act-on-drone fn args))
 
 
 (defn do-land [parse]
-  (log/i "Drone is landing."))
+  (log-it "Drone is landing."))
 
 (defn do-take-off [parse]
-  (log/i "Drone is taking off."))
+  (log-it "Drone is taking off."))
 
 
 (def drone-actions
   {:do-land do-land
-   :do-takeoff do-take-off})
+   :do-take-off do-take-off})
 
 
 (defn action-for-concept [concept]
@@ -77,18 +82,18 @@
 
 
 (defn perform-drone-action-for-concept [concept]
-  (act-on-drone! (action-for-concept concept)))
+  (act-on-drone! (action-for-concept concept) (list concept)))
 
 
 (defn perform-action-for-concept [world concept]
-  (log/i "Performing action" concept)
+  (log-it "Performing action" concept)
   (let [action-sym (fdl/get-slot world concept :action)
         action-function (drone-actions action-sym)]
-    (log/i "Action sym:" action-sym
+    (log-it "Action sym:" action-sym
            "Action function:" action-function)
     (when action-function
-      (log/i "Calling" action-function)
-      (apply action-function '()))))
+      (log-it "Calling" action-function)
+      (apply action-function (list concept)))))
 
 
 (def speech-recognizer (atom nil))
@@ -101,7 +106,7 @@
 
 
 (defn listen []
-  (log/i "STARTING LISTENING")
+  (log-it "STARTING LISTENING")
   (set-mute! @audio-manager true)
   (speech/start-listening @speech-recognizer))
 
@@ -131,29 +136,29 @@
 (defn handle-speech-results [^Bundle results]
   (set-elmt ::speech-status "")
   (let [texts (speech/speech-results results)]
-    (log/i :on-speech-results (str "\n\n\n" texts "\n\n\n"))
+    (log-it :on-speech-results (str "\n\n\n" texts "\n\n\n"))
     (let [best-text (first texts)
           parses (icp/icp world (string/split best-text #"\s+"))]
-      (log/i "Best text" best-text)
-      (log/i "Parses" parses)
+      (log-it "Best text" best-text)
+      (log-it "Parses" parses)
       (set-elmt ::recognized-text best-text)
       (let [best-parse (first parses)]
         (when best-parse
           (set-elmt ::parse (str best-parse))
           (perform-action-for-concept world (first best-parse)))))
 
-    ;; (log/i "Speaking")
+    ;; (log-it "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
     ;;  (speech/utterance-progress-listener
     ;;   :on-done (fn [utterance-id]
-    ;;              (log/i "TTS :on-done" utterance-id)
+    ;;              (log-it "TTS :on-done" utterance-id)
     ;;              (listen))
     ;;   :on-error (fn [utterance-id]
-    ;;               (log/i "TTS :on-error" utterance-id)
+    ;;               (log-it "TTS :on-error" utterance-id)
     ;;               (listen))
     ;;   :on-start (fn [utterance-id]
-    ;;               (log/i "TTS :on-start" utterance-id))))
+    ;;               (log-it "TTS :on-start" utterance-id))))
     ;; (.speak
     ;;  @tts
     ;;  (first texts)
@@ -165,7 +170,7 @@
 
 
 (defn handle-speech-error [error]
-  (log/i :on-speech-error error (str "(" (speech/error-name error) ")"))
+  (log-it :on-speech-error error (str "(" (speech/error-name error) ")"))
   (set-elmt ::speech-status (speech/error-name error))
   (when-not (= error SpeechRecognizer/ERROR_RECOGNIZER_BUSY)
     (listen)))
@@ -205,7 +210,7 @@
     (threading/on-ui
      (activity/set-content-view! a
       (ui/make-ui main-layout))
-     (log/i "WORLD" world)
+     (log-it "WORLD" world)
      (reset! audio-manager
              (.getSystemService context/context Context/AUDIO_SERVICE))
      (reset! tts (android.speech.tts.TextToSpeech. context/context nil))
@@ -213,15 +218,15 @@
       speech-recognizer
       (speech/create-recognizer
        (speech/recognizer-listener
-        :on-beginning-of-speech #(log/i :on-beginning-of-speech)
-        :on-buffer-received #(log/i :on-buffer-received %1)
-        :on-end-of-speech #(log/i :on-end-of-speech)
+        :on-beginning-of-speech #(log-it :on-beginning-of-speech)
+        :on-buffer-received #(log-it :on-buffer-received %1)
+        :on-end-of-speech #(log-it :on-end-of-speech)
         :on-error handle-speech-error
-        :on-event #(log/i :on-event %1 %2)
-        :on-partial-results #(log/i :on-partial-results %1)
-        :on-ready-for-speech #(log/i :on-ready-for-speech %1)
+        :on-event #(log-it :on-event %1 %2)
+        :on-partial-results #(log-it :on-partial-results %1)
+        :on-ready-for-speech #(log-it :on-ready-for-speech %1)
         :on-results handle-speech-results
         :on-rms-changed update-rms)))
-     (log/i "Created speech recognizer")
+     (log-it "Created speech recognizer")
      (speech/start-listening @speech-recognizer)
-     (log/i "Started listening"))))
+     (log-it "Started listening"))))
