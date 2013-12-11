@@ -18,7 +18,8 @@
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
                                   [midje "1.4.0"]
                                   [org.clojure/math.numeric-tower "0.0.2"]
-                                  [compliment "0.0.2"]]
+                                  ;[compliment "0.0.2"]
+                                  ]
                    :android {:aot :all-with-unused}}
              :release {:android
                        {;; Specify the path to your private keystore
@@ -44,4 +45,4 @@
             ;; :force-dex-optimize true
 
             :target-version "19"
-            :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"]})
+            :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers" "bench.set"]})

@@ -1,6 +1,6 @@
 (ns com.lemonodor.androne.main
   (:require
-   ;;[clj-drone.core :as ar-drone]
+   [com.lemondronor.ar-drone.core :as ar-drone]
    [clojure.string :as string]
    ;[clojure.tools.logging :as log]
    [com.lemonodor.androne.fdl :as fdl]
@@ -55,20 +55,22 @@
 
 (defn act-on-drone [drone fn args]
   (when-not drone
-    ;;(ar-drone/drone-initialize)
-    )
+    (log/i "Initializing drone.")
+    (ar-drone/drone-initialize))
   (apply fn args)
   true)
 
-(defn act-on-drone! [fn args]
-  (send-off agent act-on-drone fn args))
+(defn act-on-drone! [fn & args]
+  (send-off drone act-on-drone fn args))
 
 
 (defn do-land [parse]
-  (log-it "Drone is landing."))
+  (log-it "Drone is landing.")
+  (act-on-drone! #(ar-drone/drone :land)))
 
 (defn do-take-off [parse]
-  (log-it "Drone is taking off."))
+  (log-it "Drone is taking off.")
+  (act-on-drone! #(ar-drone/drone :take-off)))
 
 
 (def drone-actions

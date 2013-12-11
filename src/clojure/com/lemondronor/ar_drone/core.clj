@@ -3,7 +3,8 @@
   (:require [com.lemondronor.ar-drone.at :refer :all]
             [com.lemondronor.ar-drone.navdata :refer :all]
             [com.lemondronor.ar-drone.goals :refer :all]
-            [clojure.tools.logging :as log]))
+            [neko.log :as logimpl]
+            ))
 
 
 (def default-drone-ip "192.168.1.1")
@@ -14,6 +15,10 @@
 (declare mdrone)
 (declare drone-init-navdata)
 
+
+(defn log [& args]
+  (let [msg (apply str args)]
+    (logimpl/i msg)))
 
 (defn drone-initialize
   ([] (drone-initialize :default default-drone-ip default-at-port))
@@ -69,7 +74,7 @@
 
 (defn communication-check [name]
   (when (= :problem (:com-watchdog @(get-nav-data name)))
-    (log/info "Watchdog Reset")
+    (log "Watchdog Reset")
     (mdrone name :reset-watchdog)))
 
 (defn get-ip-from-packet [packet]
@@ -77,18 +82,18 @@
 
 (defn stream-navdata [_ socket packet]
   (do
-    (log/info "Waiting to receive data")
+    (log "Waiting to receive data")
     (receive-navdata socket packet)
     (let [ipfrom (get-ip-from-packet packet)
           drone (find-drone ipfrom)
           from-name (first (keys drone))]
       (parse-navdata (get-navdata-bytes packet) (get-nav-data from-name))
-      (log/info (str "(" from-name ") " "navdata: "(log-flight-data (get-nav-data from-name))))
+      (log (str "(" from-name ") " "navdata: "(log-flight-data (get-nav-data from-name))))
       (communication-check from-name)
       (eval-current-goals drones from-name @(get-nav-data from-name))
-      (log/info (log-goal-info drones from-name)))
+      (log (log-goal-info drones from-name)))
     (if @stop-navstream
-      (log/info "navstream-ended")
+      (log "navstream-ended")
       (recur nil socket packet))))
 
 
@@ -96,11 +101,11 @@
   (let [receive-data (byte-array 2048)
         nav-datagram-receive-packet (new-datagram-packet receive-data host port)]
     (do
-      (log/info "Starting navdata stream")
+      (log "Starting navdata stream")
       (swap! (get-nav-data name) {})
       (.setSoTimeout navdata-socket @socket-timeout)
       (send nav-agent stream-navdata navdata-socket nav-datagram-receive-packet)
-      (log/info "Creating navdata stream" ))))
+      (log "Creating navdata stream" ))))
 
 
 (defn init-streaming-navdata [navdata-socket host port]
@@ -119,12 +124,12 @@
       (let [navdata-socket (:navdata-socket (name @drones))
             nav-agent (:nav-agent (name @drones))]
        (when (= (.getClass ex) java.net.SocketTimeoutException)
-         (log/info "Reststarting nav stream")
+         (log "Reststarting nav stream")
          (reset! navdata-socket (DatagramSocket. ))
-         (log/info "redef navdata-socket")
+         (log "redef navdata-socket")
          (.setSoTimeout navdata-socket @socket-timeout)
          (reset! nav-agent (agent {}))
-         (log/info (str "agent now is " nav-agent))
+         (log (str "agent now is " nav-agent))
          (when-not  @stop-navstream
            (mdrone-init-navdata name))))
       )))
@@ -135,8 +140,8 @@
         nav-agent (:nav-agent (name @drones))
         navdata-socket (:navdata-socket (name @drones))]
     (do
-      (log/info "Initializing navdata")
-      (log/info nav-agent)
+      (log "Initializing navdata")
+      (log nav-agent)
       (reset! nav-data {})
       (set-error-handler! nav-agent (navdata-error-handler name))
       (init-streaming-navdata navdata-socket host navdata-port)
