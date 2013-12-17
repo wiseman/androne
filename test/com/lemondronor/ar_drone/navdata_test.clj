@@ -71,210 +71,217 @@
 (def socket (DatagramSocket. ))
 (def packet (new-datagram-packet (byte-array 2048) host port))
 
-(fact "about new-datagram-packet"
-      (let [data (byte-array (map byte [1 0 0 0]))
-            ndp (new-datagram-packet data host port)]
-        (.getPort ndp) => port
-        (.getAddress ndp) => host
-        (.getData ndp) => data))
+(facts "about new-datagram-packet"
+  (fact "getPort/getAddress/getData"
+    (let [data (byte-array (map byte [1 0 0 0]))
+          ndp (new-datagram-packet data host port)]
+      (.getPort ndp) => port
+      (.getAddress ndp) => host
+      (.getData ndp) => data)))
 
-(fact "about get-int"
-      (get-int (byte-array header) 0) => 0x55667788)
+(facts "about get-int"
+  (fact "get-int"
+    (get-int (byte-array header) 0) => 0x55667788))
 
-(fact "about get-short"
-      (get-short (map byte b-demo-option-size) 0) => 148)
+(facts "about get-short"
+  (fact "get-short"
+    (get-short (map byte b-demo-option-size) 0) => 148))
 
-(fact "about get-float"
-      (get-float (map byte b-demo-pitch) 0) => -1075.0)
+(facts "about get-float"
+  (fact "get-float"
+    (get-float (map byte b-demo-pitch) 0) => -1075.0))
 
 (facts "about get-int-by-n"
-       (get-int-by-n (map byte b-target-type) 0 0) => 1
-       (get-int-by-n (map byte b-target-type) 0 1) => 2
-       (get-int-by-n (map byte b-target-type) 0 2) => 3
-       (get-int-by-n (map byte b-target-type) 0 3) => 4)
+  (fact "get-int-by-n"
+    (get-int-by-n (map byte b-target-type) 0 0) => 1
+    (get-int-by-n (map byte b-target-type) 0 1) => 2
+    (get-int-by-n (map byte b-target-type) 0 2) => 3
+    (get-int-by-n (map byte b-target-type) 0 3) => 4))
 
 
 (facts "about get-float-by-n"
-       (get-float-by-n (map byte b-demo-pitch) 0 0) => -1075.0)
+  (fact "get-float-by-n"
+    (get-float-by-n (map byte b-demo-pitch) 0 0) => -1075.0))
 
-(fact "about parse-control-state"
-      (parse-control-state b-demo-option 4) => :landed)
+(facts "about parse-control-state"
+  (fact "parse-control-state"
+    (parse-control-state b-demo-option 4) => :landed))
 
-(fact "about parse-demo-option"
-      (let [option (parse-demo-option b-demo-option 0)]
-        option => (contains {:control-state :landed})
-        option => (contains {:battery-percent 100 })
-        option => (contains {:pitch (float -1.075) })
-        option => (contains {:roll (float -2.904) })
-        option => (contains {:yaw (float -0.215) })
-        option => (contains {:altitude  (float 0.0) })
-        option => (contains {:velocity-x  (float 0.0) })
-        option => (contains {:velocity-y  (float 0.0) })
-        option => (contains {:velocity-z  (float 0.0) })
-        option => (contains {:detect-camera-type :roundel-under-drone })
-        ))
-
-
-(fact "about parse-navdata"
-      (parse-navdata nav-input (get-nav-data :default)) => anything
-      @(get-nav-data :default) => (contains {:header 0x55667788})
-      @(get-nav-data :default) => (contains {:battery :ok})
-      @(get-nav-data :default) => (contains {:flying :landed})
-      @(get-nav-data :default) => (contains {:seq-num 870})
-      @(get-nav-data :default) => (contains {:vision-flag false})
-      @(get-nav-data :default) => (contains {:control-state :landed})
-      @(get-nav-data :default) => (contains {:battery-percent 100 })
-      @(get-nav-data :default) => (contains {:pitch (float -1.075) })
-      @(get-nav-data :default) => (contains {:roll (float -2.904) })
-      @(get-nav-data :default) => (contains {:yaw (float -0.215) })
-      @(get-nav-data :default) => (contains {:altitude (float 0.0) })
-      @(get-nav-data :default) => (contains {:velocity-x (float 0.0)})
-      @(get-nav-data :default) => (contains {:velocity-y (float 0.0)})
-      @(get-nav-data :default) => (contains {:velocity-z (float 0.0)})
-      (against-background (before :facts (reset! drones {:default {:nav-data (atom {})}}))))
+(facts "about parse-demo-option"
+  (fact "parse-demo-option"
+    (let [option (parse-demo-option b-demo-option 0)]
+      option => (contains {:control-state :landed})
+      option => (contains {:battery-percent 100 })
+      option => (contains {:pitch (float -1.075) })
+      option => (contains {:roll (float -2.904) })
+      option => (contains {:yaw (float -0.215) })
+      option => (contains {:altitude  (float 0.0) })
+      option => (contains {:velocity-x  (float 0.0) })
+      option => (contains {:velocity-y  (float 0.0) })
+      option => (contains {:velocity-z  (float 0.0) })
+      option => (contains {:detect-camera-type :roundel-under-drone }))))
 
 
-(fact "about stream-navdata"
-      (stream-navdata nil socket packet) => anything
-      (provided
-        (receive-navdata anything anything) => 1
-        (get-nav-data :default) => (:nav-data (:default @drones))
-        (get-navdata-bytes anything) => nav-input
-        (get-ip-from-packet anything) => "192.168.1.1")
-      (against-background
-        (before :facts (do
-                         (reset! drones {:default {:nav-data (atom {})
-                                                   :host (InetAddress/getByName "192.168.1.1")
-                                                   :current-belief (atom "None")
-                                                   :current-goal (atom "None")
-                                                   :current-goal-list (atom [])}})
-                         (reset! stop-navstream true)))))
+(facts "about parse-navdata"
+  (fact "parse-navdata"
+    (parse-navdata nav-input (get-nav-data :default)) => anything
+    @(get-nav-data :default) => (contains {:header 0x55667788})
+    @(get-nav-data :default) => (contains {:battery :ok})
+    @(get-nav-data :default) => (contains {:flying :landed})
+    @(get-nav-data :default) => (contains {:seq-num 870})
+    @(get-nav-data :default) => (contains {:vision-flag false})
+    @(get-nav-data :default) => (contains {:control-state :landed})
+    @(get-nav-data :default) => (contains {:battery-percent 100 })
+    @(get-nav-data :default) => (contains {:pitch (float -1.075) })
+    @(get-nav-data :default) => (contains {:roll (float -2.904) })
+    @(get-nav-data :default) => (contains {:yaw (float -0.215) })
+    @(get-nav-data :default) => (contains {:altitude (float 0.0) })
+    @(get-nav-data :default) => (contains {:velocity-x (float 0.0)})
+    @(get-nav-data :default) => (contains {:velocity-y (float 0.0)})
+    @(get-nav-data :default) => (contains {:velocity-z (float 0.0)})
+    (against-background (before :facts (reset! drones {:default {:nav-data (atom {})}})))))
 
 
-(fact "about parse-nav-state"
-      (let [ state 260048080
-            result (parse-nav-state state)
-            {:keys [ flying video vision control altitude-control
-                    user-feedback command-ack camera travelling
-                    usb demo bootstrap motors communication
-                    software battery emergency-landing timer
-                    magneto angles wind ultrasound cutout
-                    pic-version atcodec-thread navdata-thread
-                    video-thread acquisition-thread ctrl-watchdog
-                    adc-watchdog com-watchdog emergency]} result]
-        flying => :landed
-        video => :off
-        vision => :off
-        control => :euler-angles
-        altitude-control => :on
-        user-feedback => :off
-        command-ack => :received
-        camera => :ready
-        travelling => :off
-        usb => :not-ready
-        demo => :on
-        bootstrap => :off
-        motors => :ok
-        communication => :ok
-        software => :ok
-        battery => :ok
-        emergency-landing => :off
-        timer => :not-elapsed
-        magneto => :ok
-        angles => :ok
-        wind => :ok
-        ultrasound => :ok
-        cutout => :ok
-        pic-version => :ok
-        atcodec-thread => :on
-        navdata-thread => :on
-        video-thread => :on
-        acquisition-thread => :on
-        ctrl-watchdog => :ok
-        adc-watchdog => :ok
-        com-watchdog => :ok
-        emergency => :ok
-        ))
-
-(fact  "about which-option-type"
-      (which-option-type 0) => :demo
-      (which-option-type 16) => :target-detect
-      (which-option-type 2342342) => :unknown)
-
-(fact "about parse-tag-detect"
-      (parse-tag-detect 131072) => :vertical-hsync)
-
-(fact "about parse-target-tag with the first target"
-      (let [tag (parse-target-tag (map byte b-target-option) 0 0)]
-        tag => (contains {:target-type :horizontal})
-        tag => (contains {:target-xc 1})
-        tag => (contains {:target-yc 1})
-        tag => (contains {:target-width 1})
-        tag => (contains {:target-height 1})
-        tag => (contains {:target-dist 1})
-        tag => (contains {:target-orient-angle -1075.0})
-        tag => (contains {:target-camera-source :vertical})))
-
-(fact "about parse-target-tag with the second target"
-      (let [tag (parse-target-tag (map byte b-target-option) 0 1)]
-        tag => (contains {:target-type :horizontal})
-        tag => (contains {:target-xc 2})
-        tag => (contains {:target-yc 2})
-        tag => (contains {:target-width 2})
-        tag => (contains {:target-height 2})
-        tag => (contains {:target-dist 2})
-        tag => (contains {:target-orient-angle -1075.0})
-        tag => (contains {:target-camera-source :vertical-hsync})))
-
-(fact "about parse-target-tag with the third target"
-      (let [tag (parse-target-tag (map byte b-target-option) 0 2)]
-        tag => (contains {:target-type :horizontal})
-        tag => (contains {:target-xc 3})
-        tag => (contains {:target-yc 3})
-        tag => (contains {:target-width 3})
-        tag => (contains {:target-height 3})
-        tag => (contains {:target-dist 3})
-        tag => (contains {:target-orient-angle -1075.0})
-        tag => (contains {:target-camera-source :vertical-hsync})))
-
-(fact "about parse-target-tag with the fourth target"
-      (let [tag (parse-target-tag (map byte b-target-option) 0 3)]
-        tag => (contains {:target-type :horizontal})
-        tag => (contains {:target-xc 4})
-        tag => (contains {:target-yc 4})
-        tag => (contains {:target-width 4})
-        tag => (contains {:target-height 4})
-        tag => (contains {:target-dist 4})
-        tag => (contains {:target-orient-angle -1075.0})
-        tag => (contains {:target-camera-source :vertical-hsync})))
+(facts "about stream-navdata"
+  (fact "stream-navdata"
+    (stream-navdata nil socket packet) => anything
+    (provided
+      (receive-navdata anything anything) => 1
+      (get-nav-data :default) => (:nav-data (:default @drones))
+      (get-navdata-bytes anything) => nav-input
+      (get-ip-from-packet anything) => "192.168.1.1")
+    (against-background
+      (before :facts (do
+                       (reset! drones {:default {:nav-data (atom {})
+                                                 :host (InetAddress/getByName "192.168.1.1")
+                                                 :current-belief (atom "None")
+                                                 :current-goal (atom "None")
+                                                 :current-goal-list (atom [])}})
+                       (reset! stop-navstream true))))))
 
 
-(fact "about parse-target-option"
-      (let [t-tag {:target-type :horizontal
-                   :target-xc 1
-                   :target-yc 1
-                   :target-width 1
-                   :target-height 1
-                   :target-dist 1
-                   :target-orient-angle -1075.0
-                   :target-camera-source 1}
-            option (parse-target-option b-target-option 0)
-            targets (:targets option)]
-        option => (contains {:targets-num 2})
-        (count targets) => 2
-        (first targets) => (contains {:target-type :horizontal})))
+(facts "about parse-nav-state"
+  (fact "parse-nav-state"
+    (let [ state 260048080
+          result (parse-nav-state state)
+          {:keys [ flying video vision control altitude-control
+                  user-feedback command-ack camera travelling
+                  usb demo bootstrap motors communication
+                  software battery emergency-landing timer
+                  magneto angles wind ultrasound cutout
+                  pic-version atcodec-thread navdata-thread
+                  video-thread acquisition-thread ctrl-watchdog
+                  adc-watchdog com-watchdog emergency]} result]
+      flying => :landed
+      video => :off
+      vision => :off
+      control => :euler-angles
+      altitude-control => :on
+      user-feedback => :off
+      command-ack => :received
+      camera => :ready
+      travelling => :off
+      usb => :not-ready
+      demo => :on
+      bootstrap => :off
+      motors => :ok
+      communication => :ok
+      software => :ok
+      battery => :ok
+      emergency-landing => :off
+      timer => :not-elapsed
+      magneto => :ok
+      angles => :ok
+      wind => :ok
+      ultrasound => :ok
+      cutout => :ok
+      pic-version => :ok
+      atcodec-thread => :on
+      navdata-thread => :on
+      video-thread => :on
+      acquisition-thread => :on
+      ctrl-watchdog => :ok
+      adc-watchdog => :ok
+      com-watchdog => :ok
+      emergency => :ok)))
 
-(fact "about parse option with demo"
-      (let [option (parse-options b-demo-option 0 {})]
-        option => (contains {:control-state :landed})))
+(facts "about which-option-type"
+  (fact "which-option-type"
+    (which-option-type 0) => :demo
+    (which-option-type 16) => :target-detect
+    (which-option-type 2342342) => :unknown))
 
-(fact "about parse option with targets"
-      (let [option (parse-options b-target-option 0 {})]
-        option => (contains {:targets-num 2})))
+(facts "about parse-tag-detect"
+  (fact "parse-tag-detect"
+    (parse-tag-detect 131072) => :vertical-hsync))
 
-(fact "about parse-options with demo and targets"
-      (let [options (parse-options nav-input 16 {})]
-        options => (contains {:control-state :landed})
-        options => (contains {:targets-num 2})))
+(facts "about parse-target-tag"
+  (fact "about parse-target-tag with the first target"
+    (let [tag (parse-target-tag (map byte b-target-option) 0 0)]
+      tag => (contains {:target-type :horizontal})
+      tag => (contains {:target-xc 1})
+      tag => (contains {:target-yc 1})
+      tag => (contains {:target-width 1})
+      tag => (contains {:target-height 1})
+      tag => (contains {:target-dist 1})
+      tag => (contains {:target-orient-angle -1075.0})
+      tag => (contains {:target-camera-source :vertical})))
+  (fact "about parse-target-tag with the second target"
+    (let [tag (parse-target-tag (map byte b-target-option) 0 1)]
+      tag => (contains {:target-type :horizontal})
+      tag => (contains {:target-xc 2})
+      tag => (contains {:target-yc 2})
+      tag => (contains {:target-width 2})
+      tag => (contains {:target-height 2})
+      tag => (contains {:target-dist 2})
+      tag => (contains {:target-orient-angle -1075.0})
+      tag => (contains {:target-camera-source :vertical-hsync})))
+  (fact "about parse-target-tag with the third target"
+    (let [tag (parse-target-tag (map byte b-target-option) 0 2)]
+      tag => (contains {:target-type :horizontal})
+      tag => (contains {:target-xc 3})
+      tag => (contains {:target-yc 3})
+      tag => (contains {:target-width 3})
+      tag => (contains {:target-height 3})
+      tag => (contains {:target-dist 3})
+      tag => (contains {:target-orient-angle -1075.0})
+      tag => (contains {:target-camera-source :vertical-hsync})))
+  (fact "about parse-target-tag with the fourth target"
+    (let [tag (parse-target-tag (map byte b-target-option) 0 3)]
+      tag => (contains {:target-type :horizontal})
+      tag => (contains {:target-xc 4})
+      tag => (contains {:target-yc 4})
+      tag => (contains {:target-width 4})
+      tag => (contains {:target-height 4})
+      tag => (contains {:target-dist 4})
+      tag => (contains {:target-orient-angle -1075.0})
+      tag => (contains {:target-camera-source :vertical-hsync}))))
 
 
+(facts "about parse-target-option"
+  (fact "parse-target-option"
+    (let [t-tag {:target-type :horizontal
+                 :target-xc 1
+                 :target-yc 1
+                 :target-width 1
+                 :target-height 1
+                 :target-dist 1
+                 :target-orient-angle -1075.0
+                 :target-camera-source 1}
+          option (parse-target-option b-target-option 0)
+          targets (:targets option)]
+      option => (contains {:targets-num 2})
+      (count targets) => 2
+      (first targets) => (contains {:target-type :horizontal}))))
+
+(facts "about parse-options"
+  (fact "about parse-options with demo"
+    (let [option (parse-options b-demo-option 0 {})]
+      option => (contains {:control-state :landed})))
+  (fact "about parse option with targets"
+    (let [option (parse-options b-target-option 0 {})]
+      option => (contains {:targets-num 2})))
+  (fact "about parse-options with demo and targets"
+    (let [options (parse-options nav-input 16 {})]
+      options => (contains {:control-state :landed})
+      options => (contains {:targets-num 2}))))
