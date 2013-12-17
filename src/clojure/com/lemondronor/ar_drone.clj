@@ -1,4 +1,4 @@
-(ns com.lemondronor.ar-drone.core
+(ns com.lemondronor.ar-drone
   (:import (java.net DatagramPacket DatagramSocket InetAddress))
   (:require [com.lemondronor.ar-drone.at :refer :all]
             [com.lemondronor.ar-drone.navdata :refer :all]

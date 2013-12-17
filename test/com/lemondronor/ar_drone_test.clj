@@ -1,8 +1,8 @@
-(ns com.lemondronor.ar-drone.core-test
+(ns com.lemondronor.ar-drone-test
   (:import (java.net DatagramPacket InetAddress))
   (:require [clojure.test :refer :all]
             [midje.sweet :refer :all]
-            [com.lemondronor.ar-drone.core :refer :all]))
+            [com.lemondronor.ar-drone :refer :all]))
 
 (deftest core-tests
   (facts "default initialize gets default host and port"

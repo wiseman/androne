@@ -1,6 +1,6 @@
 (ns com.lemonodor.androne.main
   (:require
-   [com.lemondronor.ar-drone.core :as ar-drone]
+   [com.lemondronor.ar-drone :as ar-drone]
    [clojure.string :as string]
    ;[clojure.tools.logging :as log]
    [com.lemonodor.androne.fdl :as fdl]

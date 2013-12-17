@@ -1,7 +1,7 @@
 (ns com.lemondronor.ar-drone.goals-test
   (:require [clojure.test :refer :all]
             [midje.sweet :refer :all]
-            [com.lemondronor.ar-drone.core :refer :all]
+            [com.lemondronor.ar-drone :refer :all]
             [com.lemondronor.ar-drone.goals :refer :all]))
 
 (defn belief-fn1 [navdata] (= 1 1))

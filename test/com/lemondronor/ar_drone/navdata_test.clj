@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [midje.sweet :refer :all]
             [com.lemondronor.ar-drone.navdata :refer :all]
-            [com.lemondronor.ar-drone.core :refer :all])
+            [com.lemondronor.ar-drone :refer :all])
   (:import (java.net InetAddress DatagramSocket)))
 
 ;; matrix 33 is 9 floats
