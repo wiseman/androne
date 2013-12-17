@@ -12,6 +12,7 @@
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
   :dependencies [[ar-drone "0.1.9a"]
+                 [com.taoensso/timbre "3.0.0-RC2"]
                  [org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [org.clojure/tools.logging "0.2.6"]
                  [neko/neko "3.0.0-preview4"]]
@@ -45,4 +46,12 @@
             ;; :force-dex-optimize true
 
             :target-version "15"
-            :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers" "bench.set"]})
+            :aot-exclude-ns ["bench.set"
+                             "clojure.core.reducers"
+                             "clojure.parallel"
+                             "taoensso.timbre.appenders.carmine"
+                             "taoensso.timbre.appenders.irc"
+                             "taoensso.timbre.appenders.mongo"
+                             "taoensso.timbre.appenders.postal"
+                             "taoensso.timbre.appenders.socket"
+                             "taoensso.timbre.tools.logging"]})
