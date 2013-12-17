@@ -42,8 +42,9 @@
   (let [host (:host (name @drones))
         at-port (:at-port (name @drones))
         at-socket (:at-socket (name @drones))]
-   (.send at-socket
-          (new DatagramPacket (.getBytes data) (.length data) host at-port))))
+    (log "Sending command to " name " " data)
+    (.send at-socket
+           (new DatagramPacket (.getBytes data) (.length data) host at-port))))
 
 (defn mdrone [name command-key & [w x y z]]
   (let [counter (:counter (name @drones))

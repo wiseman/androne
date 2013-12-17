@@ -12,16 +12,14 @@
    [neko.threading :as threading]
    [neko.ui :as ui]
    [neko.ui.mapping :as mapping]
-   [neko.ui.traits :as traits]
-   )
+   [neko.ui.traits :as traits])
   (:import
    [android.app Activity]
    [android.content Context]
    [android.media AudioManager]
    [android.os Bundle]
    [android.speech SpeechRecognizer]
-   [android.util Log]
-   ))
+   [android.util Log]))
 
 
 (defn log-it [& args]
@@ -56,7 +54,7 @@
 
 (defn act-on-drone [drone fn args]
   (when-not drone
-    (log-it "Initializing drone.")
+    (log-it "Drone is Initializing.")
     (ar-drone/drone-initialize))
   (apply fn args)
   true)
@@ -149,7 +147,6 @@
         (when best-parse
           (set-elmt ::parse (str best-parse))
           (perform-action-for-concept world (first best-parse)))))
-
     ;; (log-it "Speaking")
     ;; (.setOnUtteranceProgressListener
     ;;  @tts
