@@ -1,10 +1,12 @@
 (ns com.lemondronor.ar-drone.at
   (:import (java.util BitSet)
            (java.nio ByteBuffer))
-  (:require [com.lemondronor.ar-drone.commands :refer :all]))
+  (:require
+   [clojure.string :as string]
+   [com.lemondronor.ar-drone.commands :refer :all]))
 
 (defn build-command-int [command-bit-vec]
-  (reduce #(bit-set %1 %2) 0 command-bit-vec))
+  (reduce bit-set 0 command-bit-vec))
 
 (defn cast-float-to-int [f]
   (let [bbuffer (ByteBuffer/allocate 4)]
@@ -27,7 +29,7 @@
         x-val (when x (cast-float-to-int x))
         y-val (when y (cast-float-to-int y))]
     (str (build-base-command command-class counter)
-         (apply str (interpose "," (replace {:v v-val :w w-val :x x-val :y y-val} command-vec)))
+         (string/join "," (replace {:v v-val :w w-val :x x-val :y y-val} command-vec))
          "\r")))
 
 (defn build-simple-command [command-key counter]
@@ -39,7 +41,7 @@
 (defn build-config-command [command-key counter]
   (let [{:keys [command-class option value]} (command-key commands)]
     (str (build-base-command command-class counter)
-         (apply str (interpose "," [option, value]))
+         (string/join "," [option, value])
          "\r")))
 
 (defn build-command [command-key counter & values]

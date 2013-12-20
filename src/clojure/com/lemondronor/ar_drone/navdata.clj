@@ -81,11 +81,11 @@
    8 :black_roundel})
 
 (defn tag-type-mask [type-num]
-  (bit-shift-left 1 (- type-num 1)))
+  (bit-shift-left 1 (dec type-num)))
 
 (def option-tags [0 :NAVDATA-DEMO-TAG])
 
-(defn new-datagram-packet [data host port]
+(defn new-datagram-packet [^bytes data ^InetAddress host ^long port]
   (new DatagramPacket data (count data) host port))
 
 (defn bytes-to-int [ba offset num-bytes]
@@ -114,8 +114,8 @@
 (defn get-float-by-n [ba offset n]
   (get-type-by-n ba get-float offset n))
 
-(defn which-option-type [int]
-  (case int
+(defn which-option-type [option]
+  (case (int option)
     0 :demo
     16 :target-detect
     :unknown))
@@ -210,15 +210,14 @@
                         pstate options)]
     (swap! navdata merge new-data)))
 
-(defn send-navdata  [navdata-socket datagram-packet]
+(defn send-navdata  [^DatagramSocket navdata-socket datagram-packet]
   (.send navdata-socket datagram-packet))
 
-(defn receive-navdata  [navdata-socket datagram-packet]
+(defn receive-navdata  [^DatagramSocket navdata-socket datagram-packet]
   (.receive navdata-socket datagram-packet))
 
-(defn get-navdata-bytes  [datagram-packet]
+(defn get-navdata-bytes  [^DatagramPacket datagram-packet]
   (.getData datagram-packet))
 
 (defn log-flight-data [navdata]
   (select-keys @navdata @log-data))
-

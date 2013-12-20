@@ -112,6 +112,5 @@
              :parent relative-direction
              :index-sets [[backward]]])]
     (testing "parsing"
-      (println "TOTALLY PARSING")
       (is (parse-results= (icp/icp w '("land"))
                           '([land 2.0]))))))

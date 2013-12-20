@@ -1,4 +1,6 @@
-(ns com.lemondronor.ar-drone.goals)
+(ns com.lemondronor.ar-drone.goals
+  (:require
+   [clojure.string :as string]))
 
 (defmacro def-belief-action [bname belief-str belief-fn action-fn]
   `(def ~bname { :belief-str ~belief-str
@@ -57,7 +59,7 @@
                          (eval-goal-list (get-current-goal-list drones dname) navdata drones dname)))
 
 (defn log-goal-list [goal-list]
-  (apply str (interpose ", " (map :goal-str goal-list))))
+  (string/join ", " (map :goal-str goal-list)))
 
 (defn log-goal-info [drones dname]
   (str "goal list: " (log-goal-list (get-current-goal-list drones dname))

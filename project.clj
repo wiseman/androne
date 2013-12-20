@@ -13,6 +13,7 @@
 
   :dependencies [[ar-drone "0.1.9a"]
                  [com.taoensso/timbre "3.0.0-RC2"]
+                 [instaparse "1.2.13"]
                  [org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [org.clojure/tools.logging "0.2.6"]
                  [neko/neko "3.0.0-preview4"]]
