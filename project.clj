@@ -16,7 +16,7 @@
                  [instaparse "1.2.13"]
                  [org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [org.clojure/tools.logging "0.2.6"]
-                 [neko/neko "3.0.0-preview4"]]
+                 [neko/neko "3.0.0"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
                                   [midje "1.4.0"]
                                   [org.clojure/math.numeric-tower "0.0.2"]
