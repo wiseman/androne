@@ -22,6 +22,7 @@
                                   [org.clojure/math.numeric-tower "0.0.2"]
                                   ;[compliment "0.0.2"]
                                   ]
+                   :plugins [[lein-droid "0.2.2"]]
                    :android {:aot :all-with-unused}}
              :release {:android
                        {;; Specify the path to your private keystore
